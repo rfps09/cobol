@@ -1,0 +1,98 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CADASTRO.
+       AUTHOR. RAFAEL FELIPE.
+       DATE-WRITTEN. 2025-11-16.
+       
+       ENVIRONMENT DIVISION.
+       
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 AGENCIAS.
+           03 AGENCIA-01 PIC 9(4) VALUE 7988.
+
+       01 CONTA-GERADA PIC 9(5) VALUE 0.
+
+       01 HASHSHA2-AREA-DADOS.
+          03 HASHSHA2-SENHA                PIC X(010).
+          03 HASHSHA2-RESPOSTA.
+             05 HASHSHA2-HASH              PIC 9(018).
+             05 HASHSHA2-COD-ERRO          PIC 9(003).
+             05 HASHSHA2-TXT-MSG-ERRO      PIC X(100).
+
+       LINKAGE SECTION.
+       01 CADASTRO-AREA-DADOS.
+           03 CADASTRO-NOME                PIC X(50).
+           03 CADASTRO-EMAIL               PIC X(50).
+           03 CADASTRO-TELEFONE            PIC X(15).
+           03 CADASTRO-SENHA               PIC X(10).
+           03 CADASTRO-RESPOSTA.
+               05 CADASTRO-AGENCIA         PIC 9(4).
+               05 CADASTRO-CONTA           PIC 9(5).
+               05 CADASTRO-HASH            PIC 9(18).
+               05 CADASTRO-COD-ERRO        PIC 9(03).
+               05 CADASTRO-TXT-MSG-ERRO    PIC X(100).
+       
+       PROCEDURE DIVISION USING CADASTRO-AREA-DADOS.
+      *
+       000000-PRINCIPAL SECTION.
+           PERFORM 100000-VALIDA-ENTRADA.
+           PERFORM 200000-GERA-HASH.
+           PERFORM 300000-ATRIBUI-AGENCIA.
+           PERFORM 400000-GERA-CONTA.
+           GOBACK.
+
+       000099-SAIDA.
+      *
+       100000-VALIDA-ENTRADA SECTION.
+           MOVE 1 TO CADASTRO-COD-ERRO.
+           MOVE SPACES TO CADASTRO-TXT-MSG-ERRO.
+           EVALUATE TRUE
+               WHEN CADASTRO-NOME EQUAL SPACES
+                   MOVE 'NOME NÃO PODE SER VAZIO' 
+                   TO CADASTRO-TXT-MSG-ERRO
+               WHEN CADASTRO-EMAIL EQUAL SPACES
+                   MOVE 'EMAIL NÃO PODE SER VAZIO' 
+                   TO CADASTRO-TXT-MSG-ERRO
+               WHEN CADASTRO-TELEFONE EQUAL SPACES
+                   MOVE 'TELEFONE NÃO PODE SER VAZIO' 
+                   TO CADASTRO-TXT-MSG-ERRO
+               WHEN CADASTRO-SENHA EQUAL SPACES
+                   MOVE 'SENHA NÃO PODE SER VAZIA' 
+                   TO CADASTRO-TXT-MSG-ERRO
+               WHEN OTHER
+                   MOVE 0 TO CADASTRO-COD-ERRO
+           END-EVALUATE
+
+           IF CADASTRO-COD-ERRO NOT EQUAL 0
+               GOBACK
+           END-IF.
+           
+       100099-SAIDA.
+      *
+       200000-GERA-HASH SECTION.
+           MOVE 2 TO CADASTRO-COD-ERRO.
+           MOVE CADASTRO-SENHA TO HASHSHA2-SENHA.
+           
+           CALL 'HASHSHA2' USING HASHSHA2-AREA-DADOS.
+
+           IF HASHSHA2-COD-ERRO NOT EQUAL 0
+               STRING "ERRO AO GERAR HASH: "
+                      HASHSHA2-TXT-MSG-ERRO
+                      DELIMITED BY SIZE
+                      INTO CADASTRO-TXT-MSG-ERRO
+               END-STRING
+               MOVE HASHSHA2-COD-ERRO TO CADASTRO-COD-ERRO
+               GOBACK
+           ELSE
+               MOVE 0 TO CADASTRO-COD-ERRO
+               MOVE HASHSHA2-HASH TO CADASTRO-HASH
+           END-IF.
+       200099-SAIDA.
+
+       300000-ATRIBUI-AGENCIA SECTION.
+           MOVE AGENCIA-01 TO CADASTRO-AGENCIA.
+       300099-SAIDA.
+
+       400000-GERA-CONTA SECTION.
+           COMPUTE CONTA-GERADA = (FUNCTION RANDOM * 90000) + 9999.
+           MOVE CONTA-GERADA TO CADASTRO-CONTA.
